@@ -1,0 +1,29 @@
+//@version=6
+strategy(title="Moving Average Convergence Divergence", shorttitle="MACD",initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+// Getting inputs
+fast_length = input(title = "Fast Length", defval = 12)
+slow_length = input(title = "Slow Length", defval = 26)
+
+
+// Calculating
+fast_ma = ta.ema(close, fast_length)
+slow_ma = ta.ema(close, slow_length)
+macd = fast_ma - slow_ma
+signal = ta.sma(macd, 9)
+
+hline(0, "Zero Line", color = color.rgb(120, 123, 134))
+plot(macd,   title = "MACD",   color = #2962FF)
+plot(signal, title = "Signal", color = #FF6D00)
+plot(fast_ma,color = color.blue,force_overlay = true)
+plot(slow_ma,color = color.yellow,force_overlay = true)
+
+
+if macd > signal and macd < 0
+    strategy.entry("入场",strategy.long)
+
+if ta.crossunder(macd,signal) and macd < 0
+    strategy.close("入场")
+
+if ta.crossunder(macd,0)
+    strategy.close("入场")
+
