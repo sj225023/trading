@@ -1,6 +1,6 @@
 // This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © zchan2233
-
+代码讲解：https://youtu.be/OlxItrutHWk
 //@version=6
 indicator("SMA过滤震荡",overlay = true)
 sma20 = ta.sma(close,80)
