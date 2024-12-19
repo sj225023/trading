@@ -1,0 +1,14 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+
+//@version=6
+indicator("SMA过滤震荡",overlay = true)
+sma20 = ta.sma(close,80)
+sma60 = ta.sma(close,240)
+sma120 = ta.sma(close,480)
+
+plot(sma20,color = color.black)
+plot(sma60,color = color.red)
+plot(sma120,color = color.blue)
+
+bgcolor(color = sma20 > sma60 and sma60 > sma120 ? color.rgb(76, 175, 79, 60) : color.rgb(175, 76, 76, 60))
