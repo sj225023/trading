@@ -1,0 +1,15 @@
+代码讲解： https://youtu.be/_Vf0kZ1EzI4
+
+
+rsiS = ta.rsi(close,60)
+rsiL = ta.rsi(close,120)
+
+plot(ta.sma(rsiS,9),color = color.black)
+plot(ta.sma(rsiL,9),color = color.red)
+
+
+if trend and ta.sma(rsiS,9) > ta.sma(rsiL,9)
+    strategy.entry("買入",strategy.long,qty = (strategy.initial_capital + strategy.netprofit) * 5 / close) //5是杠杆 strategy.netprofit是交易获得的收益
+
+if not trend or ta.sma(rsiS,9) < ta.sma(rsiL,9)
+    strategy.close("買入")
