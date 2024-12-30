@@ -1,0 +1,28 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+
+代码讲解：https://youtu.be/k5w5ZQdWY6U
+
+//@version=5
+strategy("RSI策略",initial_capital = 1000,slippage=5, commission_type=strategy.commission.percent, commission_value=0.05)
+
+ema200 = ta.sma(close,200)
+ema120 = ta.sma(close,120)
+
+
+rsiS = ta.sma(ta.rsi(close,60),9)
+rsiL = ta.sma(ta.rsi(close,120),9)
+
+plot(ema200,color = color.red,force_overlay = true)
+plot(ema120,color = color.black,force_overlay = true)
+
+plot(rsiS,color = color.black)
+plot(rsiL,color = color.red)
+
+if rsiS > rsiL
+    if ema120 > ema200
+        strategy.entry("买入",strategy.long,qty = (strategy.initial_capital + strategy.netprofit) / close)
+
+if rsiS < rsiL
+    strategy.close("买入")
+
