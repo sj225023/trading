@@ -1,0 +1,19 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+代碼講解：https://youtu.be/4jG8nVnaxDU
+//@version=5
+
+indicator("我的策略",overlay = true)
+sma20 = ta.sma(close,80)
+sma60 = ta.sma(close,240)
+sma120 = ta.sma(close,480)
+
+plot(sma20,color = color.black)
+plot(sma60,color = color.red)
+plot(sma120,color = color.blue)
+
+plot(close[80],show_last = 1,offset = -80,style = plot.style_circles,linewidth = 4,color=color.orange)
+
+
+
+
