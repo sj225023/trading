@@ -1,0 +1,27 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+策略讲解：https://youtu.be/c-st3cCjkVE
+//@version=5
+strategy("MACD策略",initial_capital = 1000)
+
+emaS = ta.ema(close,60)
+emaL = ta.ema(close,120)
+emaDif = emaS - emaL
+emaDifS = ta.sma(emaDif,9)
+plot(emaS,force_overlay = true,color = color.black)
+plot(emaL,force_overlay = true,color = color.red)
+
+plot(emaDif,color = color.black)
+plot(emaDifS,color = color.yellow)
+
+
+
+if emaDif > emaDifS 
+    if emaDif > 0
+        strategy.entry("long", strategy.long, (strategy.initial_capital + strategy.netprofit) * 2 / close)
+    else
+        strategy.entry("long", strategy.long, (strategy.initial_capital + strategy.netprofit) * 0.5 / close)
+
+
+if emaDif < emaDifS
+    strategy.close("long")
