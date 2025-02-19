@@ -1,0 +1,229 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+
+代码讲解：https://youtu.be/cg37hDXO3Fk
+
+//@version=5
+strategy("Double Top/Bottom",overlay = true)
+
+var bool up = true
+
+
+if (high[0] >= high[1] and low[0] <= low[1]) or (high[0] <= high[1] and low[0] >= low[1])
+    up := up
+else
+    if low[0] < low[1]
+        up := false
+
+    if high[0] > high[1]
+        up := true
+
+barcolor((high[0] >= high[1] and low[0] <= low[1]) or (high[0] <= high[1] and low[0] >= low[1]) ?  (up? color.rgb(225, 225, 225):color.rgb(225, 225, 225)): na)
+barcolor(low[0] < low[1] ? color.black : na)
+barcolor(high[0] > high[1] ?color.white : na)   
+
+
+
+
+
+var chart.point a = chart.point.new(time,bar_index,close)
+var chart.point b = chart.point.new(time,bar_index,close)
+var array<line> lineQueue = array.new<line>()
+
+
+var int upKIndex = na
+var int downKIndex = na
+var float[] upArray = array.new<float>()
+var float[] downArray = array.new<float>()
+
+
+atr = math.abs(ta.atr(1))
+
+if not na(upKIndex) and na(downKIndex) // in up
+    array.push(upArray,high)
+
+if not na(upKIndex) and not na(downKIndex) //in downKIndex
+    array.push(downArray,low)
+
+
+if ta.change(up)
+    var line newLine = na
+    var line topLine = na
+    var line bottomLine = na
+    var line bottomDistanceLine = na
+    var line topDistanceLine = na
+    var line topTpLine = na
+    var line bottomTpLine = na
+
+    var label ALabel = na
+    var label BLabel = na
+    var label CLabel = na
+    var label DLabel = na
+
+
+
+    if up
+        a := chart.point.new(time,bar_index - 1,array.min(downArray))
+        upKIndex := bar_index
+        downKIndex := na
+
+        line.new(bar_index - 1, high[1], bar_index,high[1],color = #4caf81,force_overlay = true,width = 2)
+    else
+        downKIndex := bar_index
+        b := chart.point.new(time,bar_index - 1,array.max(upArray))
+        line.new(bar_index - 1, low[1], bar_index,low[1],color = #ff5269,force_overlay = true,width = 2)
+
+    array.clear(upArray)
+    array.clear(downArray)
+
+    newLine := line.new(a,b,force_overlay = true,width = 2)
+
+
+    array.push(lineQueue, newLine)
+    if array.size(lineQueue) > 3
+
+        line firstLine = array.shift(lineQueue)
+        line.delete(firstLine)
+
+        line AB = array.get(lineQueue, 0)
+        line BC = array.get(lineQueue, 1)
+        line CD = array.get(lineQueue, 2)
+
+
+
+        A = chart.point.new(na,line.get_x1(CD),line.get_y1(CD))
+        label.delete(ALabel)
+        ALabel := label.new(point = A,text = "A",style = label.style_none,textcolor = color.red)
+
+        B = chart.point.new(na,line.get_x1(BC),line.get_y1(BC))
+        label.delete(BLabel)
+        BLabel := label.new(point = B,text = "B",style = label.style_none,textcolor = color.red)
+
+
+        C = chart.point.new(na,line.get_x2(BC),line.get_y2(BC))
+        label.delete(CLabel)
+        CLabel := label.new(point = C,text = "C",style = label.style_none,textcolor = color.red)
+
+       
+        D = chart.point.new(na,line.get_x2(CD),line.get_y2(CD))
+        label.delete(DLabel)
+        DLabel := label.new(point = D,text = "D",style = label.style_none,textcolor = color.red)
+
+
+        
+
+
+        line.delete(topLine)
+        line.delete(bottomLine)
+        line.delete(topDistanceLine)
+        line.delete(bottomDistanceLine)
+        line.delete(topTpLine)
+        line.delete(bottomTpLine)
+
+
+        topLine := line.new(line.get_x2(BC),line.get_y2(BC),line.get_x2(CD),line.get_y2(BC),force_overlay = true,width = 2)
+        bottomLine := line.new(line.get_x1(BC),line.get_y1(BC),line.get_x1(CD),line.get_y1(BC),force_overlay = true,width = 2)
+        topDistanceLine := line.new(line.get_x2(topLine),line.get_y2(topLine),line.get_x2(topLine),line.get_y2(CD),color = color.blue,style = line.style_dotted,force_overlay = true,width = 2)
+        bottomDistanceLine := line.new(line.get_x2(bottomLine),line.get_y2(bottomLine),line.get_x2(bottomLine),line.get_y1(CD),color = color.blue,style = line.style_dotted,force_overlay = true,width = 2)
+
+        if math.abs(A.price - B.price) < atr / 5 and C.index == D.index
+            line.set_color(AB,#4caf81)
+            line.set_color(BC,#4caf81)
+            line.set_color(CD,#4caf81)
+            line.set_color(bottomDistanceLine,#4caf81)
+            line.set_color(bottomLine,color.red)
+            bottomTpLine := line.new(line.get_x2(BC),line.get_y2(BC),line.get_x1(CD),line.get_y2(BC),color = #4caf81,force_overlay = true,width = 2)
+            alert("W底")
+            strategy.order("B",strategy.long,limit = high[1])
+            strategy.exit("S",from_entry = "B",limit = D.price,stop = math.max(A.price,B.price))
+
+        else if math.abs(C.price - D.price) < atr / 5 and A.index == B.index
+            line.set_color(AB,#4caf81)
+            line.set_color(BC,#4caf81)
+            line.set_color(CD,#4caf81)
+            line.set_color(topDistanceLine,#4caf81)
+            line.set_color(topLine,color.red)
+            topTpLine := line.new(line.get_x1(BC),line.get_y1(BC),line.get_x2(CD),line.get_y1(BC),color = #4caf81,force_overlay = true,width = 2)
+            alert("M顶")
+
+        else
+            line.set_color(AB,color.blue)
+            line.set_color(BC,color.blue)
+            line.set_color(CD,color.blue)
+
+//上面是策略版本 识别形态的
+
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+
+//@version=5
+indicator("ZigZag",overlay = true)
+
+var bool up = true
+
+
+if (high[0] >= high[1] and low[0] <= low[1]) or (high[0] <= high[1] and low[0] >= low[1])
+    up := up
+else
+    if low[0] < low[1]
+        up := false
+
+    if high[0] > high[1]
+        up := true
+
+barcolor((high[0] >= high[1] and low[0] <= low[1]) or (high[0] <= high[1] and low[0] >= low[1]) ?  (up? color.white:color.black): na)
+barcolor(low[0] < low[1] ? color.black : na)
+barcolor(high[0] > high[1] ?color.white : na)   
+
+
+
+
+
+var chart.point a = chart.point.new(time,bar_index,close)
+var chart.point b = chart.point.new(time,bar_index,close)
+
+
+var int upKIndex = na
+var int downKIndex = na
+var float[] upArray = array.new<float>()
+var float[] downArray = array.new<float>()
+
+if ta.change(up)
+    if up
+        a := chart.point.new(time,bar_index - 1,array.min(downArray))
+        upKIndex := bar_index
+        downKIndex := na
+
+        line.new(bar_index - 1, high[1], bar_index,high[1],color = #4caf81,force_overlay = true,width = 2)
+    else
+        downKIndex := bar_index
+        b := chart.point.new(time,bar_index - 1,array.max(upArray))
+        line.new(bar_index - 1, low[1], bar_index,low[1],color = #ff5269,force_overlay = true,width = 2)
+
+    array.clear(upArray)
+    array.clear(downArray)
+    line.new(a,b,force_overlay = true,width = 2)
+    
+
+
+if not na(upKIndex) and na(downKIndex) // in up
+    array.push(upArray,high)
+
+if not na(upKIndex) and not na(downKIndex) //in downKIndex
+    array.push(downArray,low)
+
+
+
+          
+
+
+
+
+
+    
+
+
+
+
+
+
