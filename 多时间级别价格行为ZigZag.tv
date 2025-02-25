@@ -1,0 +1,117 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zchan2233
+视频教程：https://youtu.be/juXBvgoIUJ8
+//@version=5
+indicator("ZigZag",overlay = true,max_lines_count = 500,max_boxes_count = 500)
+
+var bool up = true
+
+
+if (high[0] >= high[1] and low[0] <= low[1]) or (high[0] <= high[1] and low[0] >= low[1])
+    up := up
+else
+    if low[0] < low[1]
+        up := false
+
+    if high[0] > high[1]
+        up := true
+
+barcolor((high[0] >= high[1] and low[0] <= low[1]) or (high[0] <= high[1] and low[0] >= low[1]) ?  (up? color.white:color.black): na)
+barcolor(low[0] < low[1] ? color.black : na)
+barcolor(high[0] > high[1] ?color.white : na)   
+
+
+
+
+
+var chart.point a = chart.point.new(time,bar_index,close)
+var chart.point b = chart.point.new(time,bar_index,close)
+
+
+if ta.change(up)
+    if up
+        a := chart.point.new(time,bar_index - 1,low[1])
+        line.new(bar_index - 1, high[1], bar_index,high[1],color = #4caf81,force_overlay = true,width = 2)
+    else
+        b := chart.point.new(time,bar_index - 1,high[1])
+        line.new(bar_index - 1, low[1], bar_index,low[1],color = #ff5269,force_overlay = true,width = 2)
+
+    line.new(a,b,force_overlay = true,width = 1)
+    
+
+
+//high time frame
+
+var prevBarIndex = bar_index
+
+drawBox(left, right, top, bottom, htfUp, growthColorInput, fallColorInput, borderGrowth, borderFall) =>
+    drawnBox = box.new(left, top, right, bottom)
+    if htfUp
+        box.set_border_color(drawnBox, borderGrowth)
+        box.set_bgcolor(drawnBox, growthColorInput)
+    else
+        box.set_border_color(drawnBox, borderFall)
+        box.set_bgcolor(drawnBox, fallColorInput)
+    drawnBox
+
+
+timeframeInput = input.timeframe("15", title="Timeframe")
+
+type OHLC
+    float o
+    float h
+    float l
+    float c
+    float prevC
+
+makeOHLC(int bb = 0)=>
+    OHLC.new(open[bb], high[bb], low[bb], close[bb], close[bb+1])
+
+[bar0, bar1] = request.security(syminfo.tickerid, timeframeInput, [makeOHLC(0), makeOHLC(1)], lookahead=barmerge.lookahead_on)
+
+isNewPeriod = ta.change(time(timeframeInput)) != 0
+
+drawCurrent = barstate.islast and not isNewPeriod
+sec = drawCurrent ? bar0 : bar1
+sec := na(sec) ? OHLC.new() : sec
+
+
+var bool htfUp = true
+if (sec.h[0] >= sec.h[1] and sec.l[0] <= sec.l[1]) or (sec.h[0] <= sec.h[1] and sec.l[0] >= sec.l[1])
+    htfUp := htfUp
+else
+    if sec.l[0] < sec.l[1]
+        htfUp := false
+
+    if sec.h[0] > sec.h[1]
+        htfUp := true
+
+
+left = prevBarIndex
+right = drawCurrent ? bar_index : bar_index-1
+
+float top = sec.h
+float bottom = sec.l
+
+if isNewPeriod
+    prevBarIndex := bar_index
+    drawBox(left, right, top, bottom, htfUp, color.rgb(0, 150, 136, 80), color.rgb(244, 67, 54, 80), color.rgb(0, 150, 136, 0), color.rgb(244, 67, 54, 0))
+
+
+var chart.point htfa = chart.point.new(time,bar_index,close)
+var chart.point htfb = chart.point.new(time,bar_index,close)
+
+
+
+timeframeRatio = timeframe.in_seconds(timeframeInput) / timeframe.in_seconds(timeframe.period)
+
+if ta.change(htfUp)
+    if htfUp
+        htfa := chart.point.new(na,(left + right) / 2 - timeframeRatio ,bottom[1])
+    else
+        htfb := chart.point.new(na,(left + right) / 2 - timeframeRatio,top[1])
+
+    line.new(htfa,htfb,force_overlay = true,width = 2,color = color.black)       
+
+
+
